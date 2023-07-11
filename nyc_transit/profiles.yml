@@ -1,0 +1,7 @@
+
+default:
+  outputs:
+   dev:
+     type: duckdb
+     path: ../main.db
+  target: dev
