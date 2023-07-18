@@ -1,0 +1,10 @@
+
+SELECT table_name, table_type
+FROM information_schema.tables;
+┌────────────┬────────────┐
+│ table_name │ table_type │
+│  varchar   │  varchar   │
+├─────────────────────────┤
+│         0 rows          │
+└─────────────────────────┘
+
