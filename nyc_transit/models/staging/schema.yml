@@ -1,0 +1,445 @@
+models:
+  - name: stg__fhv_bases
+    description: "Monthly report including total dispatched trips, total dispatched shared trips, and unique dispatched vehicles aggregated by FHV (For-Hire Vehicle) base."
+    columns:
+      - name: base_number
+        description: "The TLC license number of the dispatching base"
+        tests:
+          - not_null
+          - dbt_expectations.expect_column_to_exist
+
+      - name: base_name
+        description: "The official name of the base entity"
+
+      - name: dba
+        description: "The “doing business as” name of the base"
+
+      - name: dba_category
+        description: "category of dba"
+
+      - name: filename
+        description: ""
+
+  - name: stg__bike_data
+    description: "the bike data answers questions like where do Citi Bikers ride? When do they ride? How far do they go? Which stations are most popular? What days of the week are most rides taken on? "
+    columns:
+      - name: started_at_ts
+        description: "Start Time and Date"
+        tests:
+          - not_null
+          - dbt_expectations.expect_column_to_exist
+          - dbt_expectations.expect_column_values_to_be_of_type:
+              column_type: timestamp
+
+      - name: ended_at_ts
+        description: "Stop Time and Date"
+        tests:
+          - not_null
+          - dbt_expectations.expect_column_to_exist
+          - dbt_expectations.expect_column_values_to_be_of_type:
+              column_type: timestamp
+
+      - name: tripduration
+        description: "Trip Duration (seconds)"
+        tests:
+          - not_null
+          - dbt_expectations.expect_column_to_exist
+
+      - name: start_station_id
+        description: "Start station ID"
+        tests:
+          - dbt_expectations.expect_column_to_exist
+
+      - name: start_station_name
+        description: "Start station name"
+
+      - name: start_lat
+        description: "Start latitude"
+
+      - name: start_lng
+        description: "Start longitude"
+
+      - name: end_station_id
+        description: "End station ID"
+
+      - name: end_station_name
+        description: "End station name"
+
+      - name: end_lat
+        description: "End latitude"
+
+      - name: end_lng
+        description: "End Longitude"
+
+      - name: filename
+        description: ""
+
+  - name: stg__fhv_tripdata
+    description: "Details of FHV trip data"
+    columns:
+      - name: dispatching_base_num
+        description: "The TLC Base License Number of the base that dispatched the trip"
+        tests:
+          - dbt_expectations.expect_column_to_exist
+          - not_null
+
+      - name: pickup_datetime
+        description: "The date and time of the trip pick-up"
+
+      - name: dropoff_datetime
+        description: "The date and time of the trip dropoff"
+
+      - name: pulocationid
+        description: "TLC Taxi Zone in which the trip began"
+        tests:
+          - dbt_expectations.expect_column_to_exist
+
+      - name: dolocationid
+        description: "TLC Taxi Zone in which the trip ended"
+        tests:
+          - dbt_expectations.expect_column_to_exist
+
+      - name: affiliated_base_number
+        description: ""
+
+      - name: filename
+        description: ""
+
+  - name: stg__fhvhv_tripdata
+    description: "This data dictionary describes High Volume FHV trip data."
+    columns:
+      - name: hvfhs_license_num
+        description: "The TLC license number of the HVFHS base or business
+                      As of September 2019, the HVFHS licensees are the following:
+                      • HV0002: Juno
+                      • HV0003: Uber
+                      • HV0004: Via
+                      • HV0005: Lyft
+                     "
+
+      - name: dispatching_base_num
+        description: "The TLC Base License Number of the base that dispatched the trip"
+        tests:
+          - not_null
+          - dbt_expectations.expect_column_to_exist
+          - relationships:
+              to: ref('stg__fhv_bases')
+              field: base_number
+              config:
+                severity: warn
+
+      - name: originating_base_num
+        description: "base number of the base that received the original trip request"
+        # based on the dbt test, originating_base_num contains null values, remove not_null test
+        tests:
+          - dbt_expectations.expect_column_to_exist
+
+      - name: request_datetime
+        description: "date/time when passenger requested to be picked up"
+
+      - name: on_scene_datetime
+        description: "date/time when driver arrived at the pick-up location (Accessible Vehicles-only)"
+
+      - name: pickup_datetime
+        description: "The date and time of the trip pick-up"
+
+      - name: dropoff_datetime
+        description: "The date and time of the trip drop-off"
+
+      - name: pulocationid
+        description: "TLC Taxi Zone in which the trip began"
+        tests:
+          - dbt_expectations.expect_column_to_exist
+
+      - name: dolocationid
+        description: "TLC Taxi Zone in which the trip ended"
+        tests:
+          - dbt_expectations.expect_column_to_exist
+
+      - name: trip_miles
+        description: "total miles for passenger trip"
+
+      - name: trip_time
+        description: "total time in seconds for passenger trip"
+
+      - name: base_passenger_fare
+        description: "base passenger fare before tolls, tips, taxes, and fees"
+
+      - name: tolls
+        description: "total amount of all tolls paid in trip"
+
+      - name: bcf
+        description: "total amount collected in trip for Black Car Fund"
+
+      - name: sales_tax
+        description: "total amount collected in trip for NYS sales tax"
+
+      - name: congestion_surcharge
+        description: "total amount collected in trip for NYS congestion surcharge"
+
+      - name: airport_fee
+        description: "$2.50 for both drop off and pick up at LaGuardia, Newark, and John F. Kennedy airports"
+
+      - name: tips
+        description: "total amount of tips received from passenger"
+
+      - name: driver_pay
+        description: "total driver pay (not including tolls or tips and net of commission, surcharges, or taxes)"
+
+      - name: shared_request_flag
+        description: "Did the passenger agree to a shared/pooled ride, regardless of whether they were matched? (Y/N)"
+        tests:
+          - dbt_expectations.expect_column_values_to_be_of_type:
+              column_type: bool
+              config:
+                severity: warn
+
+      - name: shared_match_flag
+        description: "Did the passenger share the vehicle with another passenger who booked separately at any point during the trip? (Y/N)"
+        tests:
+          - dbt_expectations.expect_column_values_to_be_of_type:
+              column_type: bool
+              config:
+                severity: warn
+
+      - name: access_a_ride_flag
+        description: "Was the trip administered on behalf of the Metropolitan Transportation Authority (MTA)? (Y/N)"
+        # based on the dbt test, there are null value in access_a_ride_flag, therefore, remove not_null test
+        # in addition, configure column type to warn as there are null values
+        tests:
+          - dbt_expectations.expect_column_values_to_be_of_type:
+              column_type: bool
+              config:
+                severity: warn
+
+      - name: wav_request_flag
+        description: "Did the passenger request a wheelchair-accessible vehicle (WAV)? (Y/N)"
+        tests:
+          - dbt_expectations.expect_column_values_to_be_of_type:
+              column_type: bool
+              config:
+                severity: warn
+
+      - name: wav_match_flag
+        description: "Did the trip occur in a wheelchair-accessible vehicle (WAV)? (Y/N)"
+        tests:
+          - dbt_expectations.expect_column_values_to_be_of_type:
+              column_type: bool
+              config:
+                severity: warn
+
+      - name: filename
+        description: ""
+
+  - name: stg__central_park_weather
+    description: "GHCN (Global Historical Climatology Network)-Daily is a database that addresses the critical need for historical daily temperature, precipitation, and snow records over global land areas. "
+    columns:
+      - name: station
+        description: "the station identification code"
+
+      - name: name
+        description: "the name of the station (usually city/airport name)"
+
+      - name: date
+        description: "the year of the record (4 digits) followed by month (2 digits) and day (2 digits)"
+
+      - name: awnd
+        description: "Average daily wind speed (meters per second or miles per hour as per user preference)"
+
+      - name: prcp
+        description: "Precipitation (mm or inches as per user preference, inches to hundredths on Daily Form pdf file)"
+
+      - name: snow
+        description: "Snowfall (mm or inches as per user preference, inches to tenths on Daily Form pdf file)"
+
+      - name: snwd
+        description: "Snow depth (mm or inches as per user preference, inches on Daily Form pdf file)"
+
+      - name: tmax
+        description: "Maximum temperature (Fahrenheit or Celsius as per user preference, Fahrenheit to tenths on Daily Form pdf file"
+
+      - name: tmin
+        description: "Minimum temperature (Fahrenheit or Celsius as per user preference, Fahrenheit to tenths on Daily Form pdf file"
+
+      - name: filename
+        description: ""
+
+  - name: stg__yellow_tripdata
+    description: ""
+    columns:
+      - name: vendorid
+        description: ""
+
+      - name: tpep_pickup_datetime
+        description: ""
+
+      - name: tpep_dropoff_datetime
+        description: ""
+
+      - name: passenger_count
+        description: ""
+
+      - name: trip_distance
+        description: ""
+
+      - name: ratecodeid
+        description: ""
+
+      - name: store_and_fwd_flag
+        description: ""
+
+      - name: pulocationid
+        description: ""
+
+      - name: dolocationid
+        description: ""
+
+      - name: payment_type
+        description: ""
+
+      - name: fare_amount
+        description: ""
+
+      - name: extra
+        description: ""
+
+      - name: mta_tax
+        description: ""
+
+      - name: tip_amount
+        description: ""
+
+      - name: tolls_amount
+        description: ""
+
+      - name: improvement_surcharge
+        description: ""
+
+      - name: total_amount
+        description: ""
+
+      - name: congestion_surcharge
+        description: ""
+
+      - name: airport_fee
+        description: ""
+
+      - name: filename
+        description: ""
+
+  - name: stg__green_tripdata
+    description: ""
+    columns:
+      - name: vendorid
+        description: ""
+
+      - name: lpep_pickup_datetime
+        description: ""
+
+      - name: lpep_dropoff_datetime
+        description: ""
+
+      - name: store_and_fwd_flag
+        description: ""
+
+      - name: ratecodeid
+        description: ""
+
+      - name: pulocationid
+        description: ""
+
+      - name: dolocationid
+        description: ""
+
+      - name: passenger_count
+        description: ""
+
+      - name: trip_distance
+        description: ""
+
+      - name: fare_amount
+        description: ""
+
+      - name: extra
+        description: ""
+
+      - name: mta_tax
+        description: ""
+
+      - name: tip_amount
+        description: ""
+
+      - name: tolls_amount
+        description: ""
+
+      - name: ehail_fee
+        description: ""
+
+      - name: improvement_surcharge
+        description: ""
+
+      - name: total_amount
+        description: ""
+
+      - name: payment_type
+        description: ""
+
+      - name: trip_type
+        description: ""
+
+      - name: congestion_surcharge
+        description: ""
+
+      - name: filename
+        description: ""
+
+  - name: stg__daily_citi_bike_trip_counts_and_weather
+    description: ""
+    columns:
+      - name: date
+        description: ""
+
+      - name: trips
+        description: ""
+
+      - name: precipitation
+        description: ""
+
+      - name: snow_depth
+        description: ""
+
+      - name: snowfall
+        description: ""
+
+      - name: max_temperature
+        description: ""
+
+      - name: min_temperature
+        description: ""
+
+      - name: average_wind_speed
+        description: ""
+
+      - name: dow
+        description: ""
+
+      - name: year
+        description: ""
+
+      - name: month
+        description: ""
+
+      - name: holiday
+        description: ""
+
+      - name: stations_in_service
+        description: ""
+
+      - name: weekday
+        description: ""
+
+      - name: weekday_non_holiday
+        description: ""
+
+      - name: filename
+        description: ""

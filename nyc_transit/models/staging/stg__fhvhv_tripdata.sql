@@ -8,7 +8,11 @@ renamed as (
 
     select
         hvfhs_license_num,
-        dispatching_base_num,
+        -- Edited by Lee on 7/17/2023:
+           -- base on the dbt test on source file
+           -- remove the space after dispatching_base_num,
+           -- make the first letter to upper case
+        UPPER(TRIM(dispatching_base_num)) AS dispatching_base_num,
         originating_base_num,
         request_datetime,
         on_scene_datetime,
