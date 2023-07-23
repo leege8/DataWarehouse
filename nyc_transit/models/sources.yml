@@ -80,7 +80,7 @@ sources:
             data_type: CHARACTER VARYING(256)
             tests:
               - accepted_values:
-                  values: ["member casual"]
+                  values: ['member', 'casual']
                   config:
                     severity: warn
           - name: filename
