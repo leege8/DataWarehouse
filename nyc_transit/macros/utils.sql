@@ -9,6 +9,14 @@ end)::bool
 {%- endmacro %}
 
 
+{% macro null_to_NA(column_name) -%}
+(case
+    when {{column_name}} is null then 'NA'
+    else {{column_name}}
+end)
+{%- endmacro %}
+
+
 {% test expect_column_values_to_be_between(model, column_name,
                                                    min_value=None,
                                                    max_value=None,
